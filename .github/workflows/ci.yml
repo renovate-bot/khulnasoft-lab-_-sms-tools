@@ -1,0 +1,47 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python-dev ipython python-numpy python-matplotlib python-scipy cython
+        pip install ipython numpy matplotlib scipy cython
+
+    - name: Compile C functions
+      run: |
+        cd software/models/utilFunctions_C
+        python compileModule.py build_ext --inplace
+
+    - name: Run models GUI
+      run: |
+        cd software/models_interface
+        python models_GUI.py
+
+    - name: Run transformations GUI
+      run: |
+        cd software/transformations_interface
+        python transformations_GUI.py
+
+    - name: Set up Jupyter Notebook
+      run: |
+        pip install notebook
+        jupyter notebook --version
